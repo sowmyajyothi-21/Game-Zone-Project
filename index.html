@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Game Zone</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background: linear-gradient(135deg, #080808);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    header h1 {
+      font-size: 3rem;
+      margin-bottom: 30px;
+      text-shadow: 0 0 10px #f0f, 0 0 20px #0ff;
+    }
+
+    .game-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 25px;
+      justify-content: center;
+    }
+
+    .game-card {
+      text-decoration: none;
+      color: #fff;
+      font-size: 1.5rem;
+      padding: 20px 40px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 15px;
+      box-shadow: 0 0 15px #0ff;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(3px);
+    }
+
+    .game-card:hover {
+      background: rgba(0, 0, 0, 0.9);
+      transform: scale(1.1);
+      box-shadow: 0 0 20px #f0f;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 1rem;
+      color: #fffa8b;
+      text-shadow: 0 0 5px #fffa8b;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .game-card {
+        width: 80%;
+      }
+
+      header h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Welcome to the Game Zone 🎮</h1>
+  </header>
+
+  <div class="game-container">
+    <a href="snake.html" class="game-card">🐍 Snake Game</a>
+    <a href="TB.html" class="game-card">🏗️ Tower Blocks</a>
+    <a href="MC.html" class="game-card">🧠 Memory Card</a>
+    <a href="TTT.html" class="game-card">❌⭕ Tic Tac Toe</a>
+    <a href="MM.html" class="game-card">🧠 Mind Maze</a>
+  </div>
+
+  <footer>
+    <p> Enjoy Playing! 🎮</p>
+  </footer>
+</body>
+</html>

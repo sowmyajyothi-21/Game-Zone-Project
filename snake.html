@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+      rel="stylesheet"
+    />
+    <title>Snake Game</title>
+    <style>
+      body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+  font-family: 'VT323', monospace;
+}
+
+body,
+.snake {
+  background-color: #414141;
+}
+.game-container {
+      margin-top: 590px;
+      display: flex;
+      gap: 15px;
+    }
+
+    .game-card {
+      padding: 10px 10px;
+      font-size: 16px;
+      background-color:  #abb78a;
+      color: rgb(0, 0, 0);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      
+    }
+
+    .game-card:hover {
+      background-color:  #414141;
+    }
+    a {
+  text-decoration: none;
+}
+#game-board {
+  border-radius: 100px;
+  display: grid;
+  grid-template-columns: repeat(20, 20px);
+  grid-template-rows: repeat(20, 20px);
+  margin: 5px;
+}
+
+.game-border-1 {
+  border: #595f43 solid 10px;
+  border-radius: 30px;
+  box-shadow: inset 0 0 0 10px #595f43;
+}
+
+.game-border-2 {
+  border: #abb78a solid 8px;
+  border-radius: 26px;
+  box-shadow: inset 0 0 0 10px #abb78a;
+}
+
+.game-border-3 {
+  border: #8b966c solid 30px;
+  border-radius: 20px;
+  box-shadow: inset 0 0 0 5px #8b966c;
+}
+
+#instruction-text {
+  position: absolute;
+  top: 60%;
+  color: #333;
+  width: 300px;
+  text-align: center;
+  text-transform: capitalize;
+  padding: 55px;
+  margin: 0;
+}
+
+.scores {
+  display: flex;
+  justify-content: space-between;
+}
+
+#score {
+  color: #abb78a;
+}
+
+#score,
+#highScore {
+  font-size: 40px;
+  font-weight: bolder;
+  margin: 10px 0;
+}
+
+#highScore {
+  color: #d8ddca;
+  display: none;
+}
+
+.game-border-3,
+#logo {
+  background-color: #c4cfa3;
+}
+
+.snake {
+  border: #5a5a5a 1px dotted;
+}
+
+.food {
+  background-color: #dedede;
+  border: #999 5px solid;
+}
+
+#logo {
+  position: absolute;
+}
+    </style>
+  </head>
+  <body>
+    <div>
+      <div class="scores">
+        <h1 id="score">000</h1>
+        <h1 id="highScore">000</h1>
+      </div>
+      <div class="game-border-1">
+        <div class="game-border-2">
+          <div class="game-border-3">
+            <div id="game-board"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+<div class="game-container">
+    <a href="index.html" class="game-card">Quit</a>
+</div>
+    <h1 id="instruction-text">Press spacebar to start the game</h1>
+    <img id="logo" src="snake-game-ai-gen.png" alt="snake-logo" />
+  <script>
+      // Define HTML elements
+const board = document.getElementById('game-board');
+const instructionText = document.getElementById('instruction-text');
+const logo = document.getElementById('logo');
+const score = document.getElementById('score');
+const highScoreText = document.getElementById('highScore');
+
+// Define game variables
+const gridSize = 20;
+let snake = [{ x: 10, y: 10 }];
+let food = generateFood();
+let highScore = 0;
+let direction = 'right';
+let gameInterval;
+let gameSpeedDelay = 200;
+let gameStarted = false;
+
+// Draw game map, snake, food
+function draw() {
+  board.innerHTML = '';
+  drawSnake();
+  drawFood();
+  updateScore();
+}
+
+// Draw snake
+function drawSnake() {
+  snake.forEach((segment) => {
+    const snakeElement = createGameElement('div', 'snake');
+    setPosition(snakeElement, segment);
+    board.appendChild(snakeElement);
+  });
+}
+
+// Create a snake or food cube/div
+function createGameElement(tag, className) {
+  const element = document.createElement(tag);
+  element.className = className;
+  return element;
+}
+
+// Set the position of snake or food
+function setPosition(element, position) {
+  element.style.gridColumn = position.x;
+  element.style.gridRow = position.y;
+}
+
+// Testing draw function
+// draw();
+
+// Draw food function
+function drawFood() {
+  if (gameStarted) {
+    const foodElement = createGameElement('div', 'food');
+    setPosition(foodElement, food);
+    board.appendChild(foodElement);
+  }
+}
+
+// Generate food
+function generateFood() {
+  const x = Math.floor(Math.random() * gridSize) + 1;
+  const y = Math.floor(Math.random() * gridSize) + 1;
+  return { x, y };
+}
+
+// Moving the snake
+function move() {
+  const head = { ...snake[0] };
+  switch (direction) {
+    case 'up':
+      head.y--;
+      break;
+    case 'down':
+      head.y++;
+      break;
+    case 'left':
+      head.x--;
+      break;
+    case 'right':
+      head.x++;
+      break;
+  }
+
+  snake.unshift(head);
+
+  //   snake.pop();
+
+  if (head.x === food.x && head.y === food.y) {
+    food = generateFood();
+    increaseSpeed();
+    clearInterval(gameInterval); // Clear past interval
+    gameInterval = setInterval(() => {
+      move();
+      checkCollision();
+      draw();
+    }, gameSpeedDelay);
+  } else {
+    snake.pop();
+  }
+}
+
+// Test moving
+// setInterval(() => {
+//   move(); // Move first
+//   draw(); // Then draw again new position
+// }, 200);
+
+// Start game function
+function startGame() {
+  gameStarted = true; // Keep track of a running game
+  instructionText.style.display = 'none';
+  logo.style.display = 'none';
+  gameInterval = setInterval(() => {
+    move();
+    checkCollision();
+    draw();
+  }, gameSpeedDelay);
+}
+
+// Keypress event listener
+function handleKeyPress(event) {
+  if (
+    (!gameStarted && event.code === 'Space') ||
+    (!gameStarted && event.key === ' ')
+  ) {
+    startGame();
+  } else {
+    switch (event.key) {
+      case 'ArrowUp':
+        direction = 'up';
+        break;
+      case 'ArrowDown':
+        direction = 'down';
+        break;
+      case 'ArrowLeft':
+        direction = 'left';
+        break;
+      case 'ArrowRight':
+        direction = 'right';
+        break;
+    }
+  }
+}
+
+document.addEventListener('keydown', handleKeyPress);
+
+function increaseSpeed() {
+  //   console.log(gameSpeedDelay);
+  if (gameSpeedDelay > 150) {
+    gameSpeedDelay -= 5;
+  } else if (gameSpeedDelay > 100) {
+    gameSpeedDelay -= 3;
+  } else if (gameSpeedDelay > 50) {
+    gameSpeedDelay -= 2;
+  } else if (gameSpeedDelay > 25) {
+    gameSpeedDelay -= 1;
+  }
+}
+
+function checkCollision() {
+  const head = snake[0];
+
+  if (head.x < 1 || head.x > gridSize || head.y < 1 || head.y > gridSize) {
+    resetGame();
+  }
+
+  for (let i = 1; i < snake.length; i++) {
+    if (head.x === snake[i].x && head.y === snake[i].y) {
+      resetGame();
+    }
+  }
+}
+
+function resetGame() {
+  updateHighScore();
+  stopGame();
+  snake = [{ x: 10, y: 10 }];
+  food = generateFood();
+  direction = 'right';
+  gameSpeedDelay = 200;
+  updateScore();
+}
+
+function updateScore() {
+  const currentScore = snake.length - 1;
+  score.textContent = currentScore.toString().padStart(3, '0');
+}
+
+function stopGame() {
+  clearInterval(gameInterval);
+  gameStarted = false;
+  instructionText.style.display = 'block';
+  logo.style.display = 'block';
+}
+
+function updateHighScore() {
+  const currentScore = snake.length - 1;
+  if (currentScore > highScore) {
+    highScore = currentScore;
+    highScoreText.textContent = highScore.toString().padStart(3, '0');
+  }
+  highScoreText.style.display = 'block';
+}
+
+    </script>
+  </body>
+</html>

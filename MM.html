@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Maze Game</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 90vh;
+      background: linear-gradient(to bottom,#e9dede, #eee4e4);
+      flex-direction: column;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+    }
+
+    .maze {
+      display: grid;
+      gap: 2px;
+      background-color: #b1c8db;
+      padding: 10px;
+      border: 4px solid #447070;
+      box-shadow: 5px 5px 15px rgba(146, 50, 50, 0.3);
+    }
+
+    .cell {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .wall {
+      background-color: #020202;
+    }
+
+    .player {
+      width: 50px;
+      height: 50px;
+      background-image: url('https://i.gifer.com/5ZQ2.gif');
+      background-size: cover;
+    }
+
+    .goal {
+      background-color: #0091f1;
+    }
+
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 15px;
+    }
+
+    .controls button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #0595f5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+    }
+    .controls button:hover {
+      background-color: #060507;
+    }
+   .game-container {
+      margin-top: 15px;
+      display: flex;
+      gap: 15px;
+    }
+
+    .game-card {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #0097fc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .game-card:hover {
+      background-color: #000000;
+    }
+    a {
+  text-decoration: none;
+}
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(168, 165, 165, 0.5);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 15% auto;
+      padding: 20px;
+      border: 3px solid #333;
+      width: 300px;
+      text-align: center;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .modal-content button {
+      margin-top: 15px;
+      padding: 8px 16px;
+      background-color: #3b145a;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .modal-content button:hover {
+      background-color: #521b79;
+    }
+  </style>
+</head>
+<body>
+  <h2 id="levelTitle">MIND MAZE - Level 1</h2>
+  <div class="maze" id="maze"></div>
+  <p>Time Left: <span id="timer">50</span> seconds</p>
+
+  <div class="controls">
+    <button onclick="restartGame()">Restart</button>
+  </div>
+<div class="game-container">
+    <a href="index.html" class="game-card">Quit</a>
+</div>
+
+  <!-- Modal -->
+  <div id="messageModal" class="modal">
+    <div class="modal-content">
+      <p id="messageText"></p>
+      <button onclick="closeMessage()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    const levels = [
+      [
+        [0, 1, 1, 1, 1, 1, 1],
+        [0, 0, 1, 0, 0, 0, 1],
+        [1, 0, 1, 1, 1, 0, 1],
+        [1, 0, 0, 0, 1, 0, 1],
+        [1, 1, 1, 0, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 2, 1]
+      ],
+      [
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+        [1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+        [1, 0, 1, 1, 1, 1, 0, 1, 0, 1],
+        [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
+        [1, 0, 1, 0, 1, 1, 1, 1, 0, 1],
+        [1, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 1, 1, 1, 1, 2, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+      ]
+    ];
+
+    let currentLevel = 0;
+    let mazeLayout = levels[currentLevel];
+    const maze = document.getElementById("maze");
+    let playerX = 0, playerY = 0;
+    let timeLeft = 50;
+    let timerInterval;
+
+    function drawMaze() {
+      maze.innerHTML = "";
+      maze.style.gridTemplateColumns = `repeat(${mazeLayout[0].length}, 50px)`;
+      maze.style.gridTemplateRows = `repeat(${mazeLayout.length}, 50px)`;
+      for (let y = 0; y < mazeLayout.length; y++) {
+        for (let x = 0; x < mazeLayout[y].length; x++) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+          if (mazeLayout[y][x] === 1) {
+            cell.classList.add("wall");
+          } else if (mazeLayout[y][x] === 2) {
+            cell.classList.add("goal");
+          }
+          if (x === playerX && y === playerY) {
+            cell.classList.add("player");
+          }
+          maze.appendChild(cell);
+        }
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      let newX = playerX;
+      let newY = playerY;
+      if (e.key === "ArrowUp" && playerY > 0 && mazeLayout[playerY - 1][playerX] !== 1) newY--;
+      if (e.key === "ArrowDown" && playerY < mazeLayout.length - 1 && mazeLayout[playerY + 1][playerX] !== 1) newY++;
+      if (e.key === "ArrowLeft" && playerX > 0 && mazeLayout[playerY][playerX - 1] !== 1) newX--;
+      if (e.key === "ArrowRight" && playerX < mazeLayout[0].length - 1 && mazeLayout[playerY][playerX + 1] !== 1) newX++;
+
+      playerX = newX;
+      playerY = newY;
+      drawMaze();
+
+      if (mazeLayout[playerY][playerX] === 2) {
+        if (currentLevel === 0) {
+          showMessage("Level 1 Completed! Moving to Level 2", () => {
+            currentLevel++;
+            mazeLayout = levels[currentLevel];
+            playerX = 0;
+            playerY = 0;
+            document.getElementById("levelTitle").innerText = "MIND MAZE - Level 2";
+            drawMaze();
+          });
+        } else {
+          showMessage("🎉 Congratulations! You completed all levels!", () => location.reload());
+        }
+      }
+    });
+
+    function startTimer() {
+      const timerElement = document.getElementById("timer");
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerElement.innerText = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          showMessage("⏰ Time's up! Restarting game.", () => location.reload());
+        }
+      }, 1000);
+    }
+
+    function showMessage(message, callback) {
+      const modal = document.getElementById("messageModal");
+      const messageText = document.getElementById("messageText");
+      messageText.innerText = message;
+      modal.style.display = "block";
+      modal.callback = callback;
+    }
+
+    function closeMessage() {
+      const modal = document.getElementById("messageModal");
+      modal.style.display = "none";
+      if (modal.callback) {
+        modal.callback();
+        modal.callback = null;
+      }
+    }
+
+    function restartGame() {
+      clearInterval(timerInterval);
+      currentLevel = 0;
+      mazeLayout = levels[currentLevel];
+      playerX = 0;
+      playerY = 0;
+      timeLeft = 10;
+      document.getElementById("levelTitle").innerText = "MIND MAZE - Level 1";
+      drawMaze();
+      startTimer();
+    }
+
+    function quitGame() {
+      showMessage("Thanks for playing! 👋", () => window.close());
+    }
+
+    drawMaze();
+    startTimer();
+  </script>
+
+</body>
+</html>
